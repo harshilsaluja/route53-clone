@@ -4,6 +4,17 @@ A software engineering assignment recreating Route 53 resource-management
 workflows using Next.js, TypeScript, FastAPI, and SQLite. This application will
 manage representations of DNS resources; it will not resolve DNS or call AWS.
 
+## Live Demo
+
+- **Frontend:** https://route53-clone-ten-green.vercel.app
+- **Backend API:** https://route53-clone-production-814a.up.railway.app
+- **API Documentation:** https://route53-clone-production-814a.up.railway.app/docs
+
+### Demo Credentials
+
+- **Email:** `demo@route53clone.dev`
+- **Password:** `Scaler@123`
+
 ## Features implemented
 
 The assignment includes the frontend/backend scaffolds, five-table SQLite model,
