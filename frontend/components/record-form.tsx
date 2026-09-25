@@ -1,7 +1,6 @@
 "use client";
 
 import Alert from "@cloudscape-design/components/alert";
-import Box from "@cloudscape-design/components/box";
 import Button from "@cloudscape-design/components/button";
 import ColumnLayout from "@cloudscape-design/components/column-layout";
 import Container from "@cloudscape-design/components/container";
@@ -224,22 +223,24 @@ export function RecordForm({
           </SpaceBetween>
         }
       >
-        <SpaceBetween size="l">
+        <SpaceBetween size="m">
           <Container header={<Header variant="h2">Record configuration</Header>}>
-            <SpaceBetween size="l">
+            <SpaceBetween size="m">
               <FormField
                 label="Record name"
-                description="Leave blank to create a record at the zone apex."
+                description="Enter subdomain prefix or leave blank to create a record at the zone apex."
               >
-                <SpaceBetween direction="horizontal" size="xs" alignItems="center">
-                  <Input
-                    value={name}
-                    placeholder="www"
-                    onChange={({ detail }) => setName(detail.value)}
-                    disabled={submitting}
-                  />
-                  <Box color="text-body-secondary">.{zoneName}</Box>
-                </SpaceBetween>
+                <div className="record-name-group">
+                  <div className="record-name-input">
+                    <Input
+                      value={name}
+                      placeholder="www"
+                      onChange={({ detail }) => setName(detail.value)}
+                      disabled={submitting}
+                    />
+                  </div>
+                  <span className="record-suffix">.{zoneName}</span>
+                </div>
               </FormField>
               <ColumnLayout columns={2}>
                 <FormField label="Record type">
@@ -262,7 +263,7 @@ export function RecordForm({
                 </FormField>
               </ColumnLayout>
               <FormField label="Routing policy">
-                <Input value="Simple" disabled />
+                <Input value="Simple routing" disabled />
               </FormField>
               {type === "CNAME" && !name.trim() && (
                 <Alert type="warning">
@@ -287,11 +288,11 @@ export function RecordForm({
                   ) : undefined
                 }
               >
-                Values
+                Value / Route traffic to
               </Header>
             }
           >
-            <SpaceBetween size="l">
+            <SpaceBetween size="m">
               {values.map((value, index) => (
                 <div key={index}>
                   <SpaceBetween size="s">

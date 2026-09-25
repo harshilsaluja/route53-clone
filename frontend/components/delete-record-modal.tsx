@@ -55,7 +55,7 @@ export function DeleteRecordModal({
       onDismiss={() => {
         if (!mutation.isPending) onDismiss();
       }}
-      header="Delete record?"
+      header="Delete record"
       closeAriaLabel="Close dialog"
       footer={
         <Box float="right">
@@ -76,12 +76,13 @@ export function DeleteRecordModal({
     >
       <SpaceBetween size="m">
         {error && <Alert type="error">{error}</Alert>}
+        <Alert type="warning" statusIconAriaLabel="Warning">
+          This action cannot be undone. This DNS record set will be permanently deleted.
+        </Alert>
         <Box>
-          <strong>{record?.fqdn}</strong>
-          <br />
-          {record?.record_type}
+          Are you sure you want to delete <strong>{record?.fqdn}</strong> (
+          {record?.record_type})?
         </Box>
-        <Box>This record will be permanently deleted.</Box>
       </SpaceBetween>
     </Modal>
   );

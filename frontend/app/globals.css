@@ -11,6 +11,7 @@ html,
 body {
   margin: 0;
   min-height: 100%;
+  background: #f2f3f3;
 }
 
 .aws-top-nav {
@@ -21,23 +22,35 @@ body {
 
 .login-page {
   min-height: 100vh;
-  display: grid;
-  grid-template-columns: minmax(20rem, 30rem);
-  place-content: center;
-  padding: 2rem;
-  background:
-    linear-gradient(115deg, #0f1b2a 0 32%, transparent 32%),
-    #f2f3f3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1rem;
+  background-color: #f2f3f3;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 28rem;
 }
 
 .login-brand {
-  color: #ffffff;
-  margin-bottom: 1.25rem;
-  padding-left: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  color: #16191f;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .login-brand strong {
-  color: #ff9900;
+  color: #ec7211;
+  font-weight: 900;
+  letter-spacing: 0.05em;
 }
 
 .loading-screen {
@@ -49,30 +62,73 @@ body {
 
 .metadata-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(14rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
   gap: 1.25rem 2rem;
 }
 
 .metadata-label {
   color: #5f6b7a;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
   margin-bottom: 0.25rem;
 }
 
 .metadata-value {
+  color: #16191f;
+  font-size: 0.875rem;
   overflow-wrap: anywhere;
 }
 
+.record-name-group {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+}
+
+.record-name-input {
+  flex: 1 1 auto;
+}
+
+.record-name-group .awsui-input {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
+.record-suffix {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.75rem;
+  background-color: #eaeded;
+  border: 1px solid #9ba7b6;
+  border-left: none;
+  border-radius: 0 8px 8px 0;
+  color: #5f6b7a;
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.record-values-cell {
+  font-family: Monaco, Menlo, Consolas, "Courier New", monospace;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: #16191f;
+}
+
+.record-values-item {
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+.filter-select-wrapper {
+  min-width: 170px;
+}
+
 @media (max-width: 700px) {
-  .login-page {
-    grid-template-columns: minmax(0, 1fr);
-    background: #f2f3f3;
-  }
-
-  .login-brand {
-    color: #16191f;
-  }
-
   .metadata-grid {
     grid-template-columns: 1fr;
   }

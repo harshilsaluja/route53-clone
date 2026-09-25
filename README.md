@@ -11,6 +11,8 @@ Alembic migrations, opaque session authentication, authenticated Hosted Zone and
 DNS Record APIs, and complete Cloudscape browser workflows for zones and records.
 The final workflow was exercised in a real headless browser against FastAPI and a
 disposable migrated SQLite database. `GET /health` remains available for liveness.
+The interface has undergone visual and UX refinement to match the authentic AWS
+Route 53 console layout, navigation groupings, breadcrumbs, density, and typography.
 
 The intentionally limited scope supports SIMPLE routing and the nine required
 record types. Alias records, automatic NS/SOA generation, exhaustive DNS RFC edge
@@ -127,6 +129,8 @@ README.md
 frontend/
   app/                 # App Router pages for login, zones, and records
   components/          # Cloudscape shell, forms, tables, and confirmation modals
+  hooks/               # Session and breadcrumb hooks
+  public/              # Static branding assets
   services/            # Typed authentication, zone, and record API clients
   types/               # Shared frontend API types
   .env.example

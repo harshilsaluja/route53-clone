@@ -42,60 +42,70 @@ export default function LoginPage() {
 
   return (
     <main className="login-page">
-      <div className="login-brand">
-        <strong>AWS</strong> Route 53 Clone
-      </div>
-      <Container
-        header={
-          <Header variant="h1" description="Sign in to manage hosted zones">
-            Sign in
-          </Header>
-        }
-      >
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            mutation.mutate();
-          }}
+      <div className="login-card">
+        <div className="login-brand">
+          <strong>AWS</strong>
+          <span>Route 53 Console</span>
+        </div>
+        <Container
+          header={
+            <Header
+              variant="h1"
+              description="Sign in to your Route 53 management console"
+            >
+              Sign in
+            </Header>
+          }
         >
-          <Form
-            errorText={message ?? undefined}
-            actions={
-              <Button
-                variant="primary"
-                formAction="submit"
-                loading={mutation.isPending}
-                disabled={!email || !password}
-              >
-                Sign in
-              </Button>
-            }
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              mutation.mutate();
+            }}
           >
-            <SpaceBetween size="l">
-              <Alert type="info" header="Demo account">
-                Email: demo@route53clone.dev<br />
-                Password: Scaler@123
-              </Alert>
-              <FormField label="Email">
-                <Input
-                  type="email"
-                  value={email}
-                  onChange={({ detail }) => setEmail(detail.value)}
-                  disabled={mutation.isPending}
-                />
-              </FormField>
-              <FormField label="Password">
-                <Input
-                  type="password"
-                  value={password}
-                  onChange={({ detail }) => setPassword(detail.value)}
-                  disabled={mutation.isPending}
-                />
-              </FormField>
-            </SpaceBetween>
-          </Form>
-        </form>
-      </Container>
+            <Form
+              errorText={message ?? undefined}
+              actions={
+                <Button
+                  variant="primary"
+                  formAction="submit"
+                  loading={mutation.isPending}
+                  disabled={!email || !password}
+                >
+                  Sign in
+                </Button>
+              }
+            >
+              <SpaceBetween size="m">
+                <Alert type="info" header="Evaluator Demo Credentials">
+                  <div>
+                    Email: <code>demo@route53clone.dev</code>
+                  </div>
+                  <div>
+                    Password: <code>Scaler@123</code>
+                  </div>
+                </Alert>
+                <FormField label="Email">
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={({ detail }) => setEmail(detail.value)}
+                    disabled={mutation.isPending}
+                  />
+                </FormField>
+                <FormField label="Password">
+                  <Input
+                    type="password"
+                    value={password}
+                    onChange={({ detail }) => setPassword(detail.value)}
+                    disabled={mutation.isPending}
+                  />
+                </FormField>
+              </SpaceBetween>
+            </Form>
+          </form>
+        </Container>
+      </div>
     </main>
   );
 }

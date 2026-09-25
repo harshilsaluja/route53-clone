@@ -28,12 +28,12 @@ const typeOptions: SelectProps.Option[] = [
 function Values({ values }: { values: string[] }) {
   const shown = values.slice(0, 3);
   return (
-    <div>
+    <div className="record-values-cell">
       {shown.map((value, index) => (
-        <div key={index}>{value}</div>
+        <div key={index} className="record-values-item">{value}</div>
       ))}
       {values.length > shown.length && (
-        <Box color="text-body-secondary">
+        <Box color="text-body-secondary" fontSize="body-s">
           +{values.length - shown.length} more
         </Box>
       )}
@@ -193,24 +193,26 @@ export function RecordsTable({ zoneId }: { zoneId: string }) {
               }
               onChange={({ detail }) => setSearchText(detail.filteringText)}
             />
-            <Select
-              ariaLabel="Filter by record type"
-              selectedOption={
-                typeOptions.find(
-                  (option) => option.value === (recordType ?? "ALL"),
-                ) ?? typeOptions[0]
-              }
-              options={typeOptions}
-              onChange={({ detail }) =>
-                updateUrl({
-                  record_type:
-                    detail.selectedOption.value === "ALL"
-                      ? undefined
-                      : detail.selectedOption.value,
-                  page: undefined,
-                })
-              }
-            />
+            <div className="filter-select-wrapper">
+              <Select
+                ariaLabel="Filter by record type"
+                selectedOption={
+                  typeOptions.find(
+                    (option) => option.value === (recordType ?? "ALL"),
+                  ) ?? typeOptions[0]
+                }
+                options={typeOptions}
+                onChange={({ detail }) =>
+                  updateUrl({
+                    record_type:
+                      detail.selectedOption.value === "ALL"
+                        ? undefined
+                        : detail.selectedOption.value,
+                    page: undefined,
+                  })
+                }
+              />
+            </div>
           </SpaceBetween>
         }
         pagination={
@@ -238,11 +240,12 @@ export function RecordsTable({ zoneId }: { zoneId: string }) {
               <b>{search || recordType ? "No matching records" : "No records"}</b>
               <Box color="text-body-secondary">
                 {search || recordType
-                  ? "Adjust your search or record-type filter."
-                  : "Create a record to start configuring this hosted zone."}
+                  ? "We couldn't find a match with the current search and filter criteria."
+                  : "You do not have any records in this hosted zone. Create a record to start routing traffic."}
               </Box>
               {!search && !recordType && (
                 <Button
+                  variant="primary"
                   onClick={() =>
                     router.push(
                       `/route53/hosted-zones/${zoneId}/records/create`,

@@ -27,10 +27,10 @@ export default function CreateHostedZonePage() {
   });
 
   return (
-    <SpaceBetween size="l">
+    <SpaceBetween size="m">
       <Header
         variant="h1"
-        description="Create a public or private DNS namespace."
+        description="A hosted zone tells Route 53 how to respond to DNS queries for a domain."
       >
         Create hosted zone
       </Header>

@@ -82,7 +82,7 @@ export function ZoneForm({
           </SpaceBetween>
         }
       >
-        <SpaceBetween size="l">
+        <SpaceBetween size="m">
           {mode === "edit" && (
             <Alert type="warning" header="Changing the domain name">
               Relative record names stay unchanged, so their derived fully qualified
@@ -91,10 +91,10 @@ export function ZoneForm({
             </Alert>
           )}
           <Container header={<Header variant="h2">Hosted zone configuration</Header>}>
-            <SpaceBetween size="l">
+            <SpaceBetween size="m">
               <FormField
                 label="Domain name"
-                description="Enter the DNS domain managed by this hosted zone."
+                description="Enter a fully qualified domain name, such as example.com."
                 errorText={nameError}
               >
                 <Input
@@ -108,8 +108,8 @@ export function ZoneForm({
                 />
               </FormField>
               <FormField
-                label="Description"
-                description="Optional. Add context for this hosted zone."
+                label="Description - optional"
+                description="Enter a description for the hosted zone."
               >
                 <Textarea
                   value={comment}
@@ -128,13 +128,13 @@ export function ZoneForm({
                     {
                       value: "PUBLIC",
                       label: "Public hosted zone",
-                      description: "Routes traffic on the public internet.",
+                      description: "Routes internet traffic to your resources.",
                       disabled: submitting,
                     },
                     {
                       value: "PRIVATE",
                       label: "Private hosted zone",
-                      description: "Represents private DNS within a VPC.",
+                      description: "Routes traffic within one or more Amazon VPCs.",
                       disabled: submitting,
                     },
                   ]}

@@ -15,6 +15,7 @@ import {
   type ReactNode,
 } from "react";
 import type { FlashbarProps } from "@cloudscape-design/components/flashbar";
+import { BreadcrumbsProvider } from "@/hooks/use-breadcrumbs";
 import { APIError } from "@/services/api";
 
 type Notification = FlashbarProps.MessageDefinition;
@@ -76,7 +77,7 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <NotificationsContext.Provider value={value}>
-        {children}
+        <BreadcrumbsProvider>{children}</BreadcrumbsProvider>
       </NotificationsContext.Provider>
     </QueryClientProvider>
   );

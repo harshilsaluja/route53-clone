@@ -45,7 +45,7 @@ export function DeleteZoneModal({
       onDismiss={() => {
         if (!mutation.isPending) onDismiss();
       }}
-      header="Delete hosted zone?"
+      header="Delete hosted zone"
       closeAriaLabel="Close dialog"
       footer={
         <Box float="right">
@@ -66,12 +66,12 @@ export function DeleteZoneModal({
     >
       <SpaceBetween size="m">
         {error && <Alert type="error">{error}</Alert>}
+        <Alert type="warning" statusIconAriaLabel="Warning">
+          This action cannot be undone. All DNS records stored in this hosted zone
+          will be permanently deleted.
+        </Alert>
         <Box>
-          You are about to delete <strong>{zone?.name}</strong>.
-        </Box>
-        <Box>
-          All DNS records stored in this hosted zone will also be deleted. This
-          action cannot be undone.
+          Are you sure you want to delete hosted zone <strong>{zone?.name}</strong>?
         </Box>
       </SpaceBetween>
     </Modal>

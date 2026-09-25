@@ -7,7 +7,6 @@ import Link from "@cloudscape-design/components/link";
 import Pagination from "@cloudscape-design/components/pagination";
 import Select, { type SelectProps } from "@cloudscape-design/components/select";
 import SpaceBetween from "@cloudscape-design/components/space-between";
-import StatusIndicator from "@cloudscape-design/components/status-indicator";
 import Table, { type TableProps } from "@cloudscape-design/components/table";
 import TextFilter from "@cloudscape-design/components/text-filter";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
@@ -82,11 +81,7 @@ function HostedZonesList() {
       {
         id: "type",
         header: "Type",
-        cell: (item) => (
-          <StatusIndicator type={item.type === "PUBLIC" ? "success" : "info"}>
-            {item.type === "PUBLIC" ? "Public" : "Private"}
-          </StatusIndicator>
-        ),
+        cell: (item) => (item.type === "PUBLIC" ? "Public" : "Private"),
       },
       {
         id: "records",
@@ -98,13 +93,13 @@ function HostedZonesList() {
         header: "Description",
         cell: (item) => item.comment || "—",
       },
-      { id: "id", header: "Hosted Zone ID", cell: (item) => item.id },
+      { id: "id", header: "Hosted zone ID", cell: (item) => item.id },
     ],
     [],
   );
 
   return (
-    <SpaceBetween size="l">
+    <SpaceBetween size="m">
       {query.error && (
         <ResourceError
           error={query.error}
@@ -125,7 +120,7 @@ function HostedZonesList() {
           <Header
             variant="h1"
             counter={pagination ? `(${pagination.total})` : undefined}
-            description="Create and manage public and private DNS namespaces."
+            description="A hosted zone tells Route 53 how to respond to DNS queries for a domain."
             actions={
               <SpaceBetween direction="horizontal" size="xs">
                 <Button
@@ -159,23 +154,25 @@ function HostedZonesList() {
               }
               onChange={({ detail }) => setSearchText(detail.filteringText)}
             />
-            <Select
-              ariaLabel="Filter by hosted zone type"
-              selectedOption={
-                typeOptions.find((option) => option.value === (type ?? "ALL")) ??
-                typeOptions[0]
-              }
-              options={typeOptions}
-              onChange={({ detail }) =>
-                updateUrl({
-                  type:
-                    detail.selectedOption.value === "ALL"
-                      ? undefined
-                      : detail.selectedOption.value,
-                  page: undefined,
-                })
-              }
-            />
+            <div className="filter-select-wrapper">
+              <Select
+                ariaLabel="Filter by hosted zone type"
+                selectedOption={
+                  typeOptions.find((option) => option.value === (type ?? "ALL")) ??
+                  typeOptions[0]
+                }
+                options={typeOptions}
+                onChange={({ detail }) =>
+                  updateUrl({
+                    type:
+                      detail.selectedOption.value === "ALL"
+                        ? undefined
+                        : detail.selectedOption.value,
+                    page: undefined,
+                  })
+                }
+              />
+            </div>
           </SpaceBetween>
         }
         pagination={
@@ -183,7 +180,12 @@ function HostedZonesList() {
             currentPageIndex={page}
             pagesCount={Math.max(1, pagination?.pages ?? 1)}
             onChange={({ detail }) =>
-              updateUrl({ page: detail.currentPageIndex === 1 ? undefined : String(detail.currentPageIndex) })
+              updateUrl({
+                page:
+                  detail.currentPageIndex === 1
+                    ? undefined
+                    : String(detail.currentPageIndex),
+              })
             }
             ariaLabels={{
               nextPageLabel: "Next page",
@@ -198,11 +200,14 @@ function HostedZonesList() {
               <b>{search || type ? "No matching hosted zones" : "No hosted zones"}</b>
               <Box color="text-body-secondary">
                 {search || type
-                  ? "Adjust or clear your search and filters."
-                  : "Create a hosted zone to begin managing DNS records."}
+                  ? "We couldn't find a match with the current search and filter criteria."
+                  : "You do not have any hosted zones. Create a hosted zone to start routing traffic."}
               </Box>
               {!search && !type && (
-                <Button onClick={() => router.push("/route53/hosted-zones/create")}>
+                <Button
+                  variant="primary"
+                  onClick={() => router.push("/route53/hosted-zones/create")}
+                >
                   Create hosted zone
                 </Button>
               )}
