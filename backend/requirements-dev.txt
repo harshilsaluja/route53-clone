@@ -1,2 +1,2 @@
 -r requirements.txt
-# Add development-only tools when the relevant implementation phase needs them.
+pytest==9.1.1

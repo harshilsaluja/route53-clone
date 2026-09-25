@@ -1,11 +1,11 @@
-"""Lazy SQLite connection foundation; no schema or tables are created here."""
+"""SQLite engines and request-scoped sessions; schema changes use Alembic."""
 
 import sqlite3
 from collections.abc import Generator
 from pathlib import Path
 
 from sqlalchemy import event
-from sqlalchemy.engine import URL, make_url
+from sqlalchemy.engine import Engine, URL, make_url
 from sqlmodel import Session, create_engine
 
 from app.config import BACKEND_DIR, get_settings
@@ -23,19 +23,25 @@ def resolve_database_url(raw_url: str) -> URL:
     return url
 
 
-engine = create_engine(
-    resolve_database_url(get_settings().database_url),
-    connect_args={"check_same_thread": False, "timeout": 5},
-)
-
-
-@event.listens_for(engine, "connect")
 def enable_foreign_keys(connection: sqlite3.Connection, _record: object) -> None:
     cursor = connection.cursor()
     try:
         cursor.execute("PRAGMA foreign_keys=ON")
     finally:
         cursor.close()
+
+
+def create_sqlite_engine(database_url: str | URL) -> Engine:
+    """Share connection settings between the application, migrations, and tests."""
+    url = resolve_database_url(str(database_url))
+    db_engine = create_engine(
+        url, connect_args={"check_same_thread": False, "timeout": 5}
+    )
+    event.listen(db_engine, "connect", enable_foreign_keys)
+    return db_engine
+
+
+engine = create_sqlite_engine(get_settings().database_url)
 
 
 def get_session() -> Generator[Session, None, None]:
