@@ -9,6 +9,7 @@ from app.config import Settings, get_settings
 from app.database import engine
 from app.errors import register_error_handlers
 from app.routers.auth import router as auth_router
+from app.routers.dns_records import router as dns_records_router
 from app.routers.hosted_zones import router as hosted_zones_router
 
 
@@ -32,6 +33,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     register_error_handlers(application)
     application.include_router(auth_router)
     application.include_router(hosted_zones_router)
+    application.include_router(dns_records_router)
 
     @application.get("/health", tags=["Health"])
     def health() -> dict[str, str]:

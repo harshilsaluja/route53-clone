@@ -442,4 +442,3 @@ def test_openapi_declares_hosted_zone_contract(client: TestClient) -> None:
     assert set(schema["paths"][ZONES + "/{zone_id}"]) == {"get", "patch", "delete"}
     query_fields = {item["name"] for item in schema["paths"][ZONES]["get"]["parameters"]}
     assert query_fields == {"search", "type", "page", "page_size", "sort_by", "sort_order"}
-    assert not any("/records" in path for path in schema["paths"])

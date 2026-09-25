@@ -4,15 +4,16 @@ A software engineering assignment recreating Route 53 resource-management
 workflows using Next.js, TypeScript, FastAPI, and SQLite. This application will
 manage representations of DNS resources; it will not resolve DNS or call AWS.
 
-## Current status: Phase 4
+## Current status: Phase 5
 
 Implemented: frontend/backend scaffolds, the five-table SQLite model, Alembic
-migrations, backend session authentication, authenticated Hosted Zone CRUD with
-SQL search/filtering/pagination, and isolated backend tests. GET /health remains
-unchanged.
+migrations, backend session authentication, authenticated Hosted Zone CRUD, and
+authenticated DNS Record CRUD with type validation, SQL search/filtering/pagination,
+and isolated backend tests. GET /health remains unchanged.
 
-DNS Record APIs, frontend login/resource UI, Cloudscape, frontend test tools, and
-deployment remain deferred. Phase 5 requires explicit approval.
+Frontend login/resource UI, Cloudscape, frontend test tools, Alias records,
+automatic NS/SOA generation, and deployment remain deferred. Phase 6 requires
+explicit approval.
 
 ## Architecture
 
@@ -133,10 +134,10 @@ backend/
     normalization.py
     security.py
     seed.py
-    routers/           # auth.py, hosted_zones.py
-    schemas/           # auth.py, common.py, hosted_zone.py
-    services/          # auth_service.py, hosted_zone_service.py
-    validation/dns_names.py
+    routers/           # auth.py, hosted_zones.py, dns_records.py
+    schemas/           # auth.py, common.py, hosted_zone.py, dns_record.py
+    services/          # auth_service.py, hosted_zone_service.py, dns_record_service.py
+    validation/        # dns_names.py, record_values.py
     models/            # User, Session, HostedZone, DNSRecordSet, DNSRecordValue
   migrations/
     env.py
@@ -145,6 +146,7 @@ backend/
   tests/
     conftest.py
     test_auth.py
+    test_dns_records.py
     test_hosted_zones.py
     test_database.py
     test_migrations.py
@@ -390,7 +392,59 @@ Run Hosted Zone tests or the complete backend suite from backend/:
 
 Tests use migrated temporary SQLite databases. Existing record rows are created
 directly in test fixtures to verify counts, rename preservation, and cascades;
-there are no DNS Record endpoints yet.
+the Phase 5 suite exercises the public DNS Record endpoints as well.
+
+## DNS Record backend API
+
+All record endpoints require the existing session cookie and are nested under an
+owned Hosted Zone:
+
+| Endpoint | Success | Purpose |
+| --- | --- | --- |
+| GET /api/v1/hosted-zones/{zone_id}/records | 200 | Search, filter, sort, and page records |
+| POST /api/v1/hosted-zones/{zone_id}/records | 201 | Create a logical record set and its values |
+| GET /api/v1/hosted-zones/{zone_id}/records/{record_id} | 200 | Retrieve one record |
+| PATCH /api/v1/hosted-zones/{zone_id}/records/{record_id} | 200 | Partially update a record |
+| DELETE /api/v1/hosted-zones/{zone_id}/records/{record_id} | 204 | Delete a record and cascade its values |
+
+Create accepts `name`, `record_type`, `ttl`, optional
+`routing_policy: "SIMPLE"`, and a nonempty `values` array. PATCH accepts any
+nonempty subset and replaces the complete value collection when `values` is
+present. Unknown fields and null editable fields are rejected. Responses add the
+computed `fqdn` and ordered string values without exposing value-row IDs.
+
+Record owner names are lowercase and relative to the zone. `@` and the empty
+string both represent the apex and are stored as an empty string. Supplying an
+absolute name or duplicating the zone suffix is rejected. The response FQDN is
+the zone name at the apex and `<relative-name>.<zone-name>` otherwise. Basic
+ASCII labels, underscore service labels, and a complete leftmost wildcard label
+are supported; the final FQDN is limited to 253 characters.
+
+The supported types are A, AAAA, CNAME, TXT, MX, NS, PTR, SRV, and CAA. A and
+AAAA use canonical IP formatting. Hostname targets are lowercased and lose one
+trailing dot. MX and SRV numeric fields are range checked and structural
+whitespace is canonicalized. CAA accepts flags 0-255, the tags issue,
+issuewild, and iodef, and a JSON-style quoted nonempty value. TXT uses raw
+strings: case, spaces, quotes, and backslashes round-trip unchanged.
+
+A record set cannot contain duplicate canonical values. The same zone/name/type
+is unique. CNAME requires exactly one target, cannot exist at the apex, and
+cannot coexist with another type at its owner name in either direction. Record
+set/value writes and conflict checks occur in one SQLite write transaction;
+failed creates or updates leave no partial data.
+
+List queries support `search`, `record_type`, `page`, `page_size` (maximum
+100), `sort_by` (name, record_type, ttl, created_at), and `sort_order`. Search
+runs in SQLite across relative names, derived FQDNs, and values. Value matching
+uses EXISTS, and values are eager loaded in a batched query. Hosted Zone
+`record_count` continues to count record sets, regardless of value count.
+
+Run the DNS Record tests or complete backend suite from backend/:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/test_dns_records.py
+.\.venv\Scripts\python.exe -m pytest
+```
 
 ## Tooling notes
 

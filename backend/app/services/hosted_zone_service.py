@@ -17,7 +17,7 @@ from app.schemas.hosted_zone import (
 )
 
 
-def _get_owned_zone(db: Session, user_id: UUID, zone_id: UUID) -> HostedZone:
+def get_owned_zone(db: Session, user_id: UUID, zone_id: UUID) -> HostedZone:
     zone = db.exec(select(HostedZone).where(
         HostedZone.id == zone_id, HostedZone.user_id == user_id,
     )).first()
@@ -65,7 +65,7 @@ def create_zone(db: Session, user_id: UUID, payload: HostedZoneCreate) -> Hosted
 
 
 def get_zone(db: Session, user_id: UUID, zone_id: UUID) -> HostedZoneResponse:
-    zone = _get_owned_zone(db, user_id, zone_id)
+    zone = get_owned_zone(db, user_id, zone_id)
     count = db.exec(
         select(func.count(DNSRecordSet.id)).join(HostedZone).where(
             HostedZone.id == zone_id, HostedZone.user_id == user_id,
@@ -117,7 +117,7 @@ def list_zones(
 def update_zone(
     db: Session, user_id: UUID, zone_id: UUID, payload: HostedZoneUpdate
 ) -> HostedZoneResponse:
-    zone = _get_owned_zone(db, user_id, zone_id)
+    zone = get_owned_zone(db, user_id, zone_id)
     merged = {"name": zone.name, "type": zone.type, "comment": zone.comment}
     merged.update(payload.model_dump(exclude_unset=True))
     try:
@@ -133,6 +133,6 @@ def update_zone(
 
 
 def delete_zone(db: Session, user_id: UUID, zone_id: UUID) -> None:
-    zone = _get_owned_zone(db, user_id, zone_id)
+    zone = get_owned_zone(db, user_id, zone_id)
     db.delete(zone)
     _commit(db)
