@@ -1,11 +1,14 @@
-"""FastAPI entry point. Business functionality begins in later phases."""
+"""FastAPI entry point with backend session authentication."""
 
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-from app.config import get_settings
+from app.config import Settings, get_settings
 from app.database import engine
+from app.errors import register_error_handlers
+from app.routers.auth import router as auth_router
 
 
 @asynccontextmanager
@@ -14,10 +17,26 @@ async def lifespan(_app: FastAPI):
     engine.dispose()
 
 
-app = FastAPI(title=get_settings().app_name, lifespan=lifespan)
+def create_app(settings: Settings | None = None) -> FastAPI:
+    configuration = settings if settings is not None else get_settings()
+    application = FastAPI(title=configuration.app_name, lifespan=lifespan)
+    application.state.settings = configuration
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=configuration.allowed_frontend_origins,
+        allow_credentials=True,
+        allow_methods=["GET", "POST"],
+        allow_headers=["Content-Type"],
+    )
+    register_error_handlers(application)
+    application.include_router(auth_router)
+
+    @application.get("/health", tags=["Health"])
+    def health() -> dict[str, str]:
+        """Process liveness only; does not initialize or migrate the database."""
+        return {"status": "ok"}
+
+    return application
 
 
-@app.get("/health", tags=["Health"])
-def health() -> dict[str, str]:
-    """Process liveness only; does not initialize or migrate the database."""
-    return {"status": "ok"}
+app = create_app()

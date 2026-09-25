@@ -4,15 +4,14 @@ A software engineering assignment recreating Route 53 resource-management
 workflows using Next.js, TypeScript, FastAPI, and SQLite. This application will
 manage representations of DNS resources; it will not resolve DNS or call AWS.
 
-## Current status: Phase 2
+## Current status: Phase 3
 
-Implemented: frontend/backend scaffolds, the five-table SQLite model, an initial
-Alembic migration, isolated pytest database tests, and `GET /health` returning
-`{"status":"ok"}`.
+Implemented: frontend/backend scaffolds, the five-table SQLite model, Alembic
+migrations, backend demo authentication with persistent sessions, and isolated
+database/authentication tests. GET /health remains unchanged.
 
-Authentication, resource APIs, Cloudscape UI, frontend testing frameworks, and
-deployment remain deferred. There is no deployed demo or demo login yet.
-Phase 3 requires explicit approval.
+Frontend login, resource APIs, Cloudscape UI, frontend test tools, and deployment
+remain deferred. Phase 4 requires explicit approval.
 
 ## Architecture
 
@@ -22,7 +21,7 @@ Phase 3 requires explicit approval.
 - The engine does not connect or create schema on import/startup. `/health` is
   a process-liveness endpoint, not a database-readiness check.
 - The database now contains users, sessions, hosted zones, record sets, and values.
-  Session authentication behavior remains deferred. Future UI uses Cloudscape
+  Authentication now uses opaque database-backed sessions. Future UI uses Cloudscape
   and actual Route 53 visual references.
 
 ## Prerequisites
@@ -67,7 +66,7 @@ of `.\.venv\Scripts\python.exe`. Run backend commands from `backend/`.
 - [OpenAPI documentation](http://localhost:8000/docs)
 
 `requirements.txt` owns runtime dependencies; `requirements-dev.txt` includes it.
-Alembic is a runtime migration dependency; pytest is development-only.
+Alembic and Argon2 are runtime dependencies; pytest and httpx2 are development-only.
 
 ## Environment configuration
 
@@ -103,8 +102,8 @@ Invoke-RestMethod http://127.0.0.1:8000/health
 ```
 
 Expected JSON: `{"status":"ok"}` with HTTP 200. Stop servers with Ctrl+C.
-Database tests are now available (see below). API tests, frontend component tests,
-and end-to-end tests will be introduced with their relevant phases.
+Database and authentication tests are available below. Frontend and end-to-end
+test tools remain deferred.
 
 ## Repository layout
 
@@ -127,8 +126,15 @@ backend/
     __init__.py
     config.py
     database.py
+    dependencies.py
+    errors.py
     main.py
     normalization.py
+    security.py
+    seed.py
+    routers/auth.py
+    schemas/auth.py
+    services/auth_service.py
     models/            # User, Session, HostedZone, DNSRecordSet, DNSRecordValue
   migrations/
     env.py
@@ -136,6 +142,7 @@ backend/
     versions/0001_create_database_foundation.py
   tests/
     conftest.py
+    test_auth.py
     test_database.py
     test_migrations.py
   .env.example
@@ -185,7 +192,7 @@ Timestamps default to aware UTC in Python, are stored as naive UTC in SQLite,
 and return as aware UTC after loading. Naive Python timestamp inputs are rejected.
 SQL defaults use CURRENT_TIMESTAMP (UTC); ORM/SQLAlchemy updates refresh
 `updated_at`. Direct textual SQL updates must set `updated_at` explicitly.
-No timestamp triggers or authentication logic are introduced.
+No timestamp triggers are used.
 
 From `backend/`, using the configured DATABASE_URL:
 
@@ -221,6 +228,84 @@ Warnings are treated as test failures.
 Zone name/comment/type editing remains planned. Renaming a zone preserves
 relative record owners without rewriting target values. Alias, automatic NS/SOA,
 and bonuses remain deferred. Deployment must preserve SQLite on persistent disk.
+
+## Backend demo authentication
+
+From backend/, after installing requirements-dev.txt:
+
+```powershell
+.\.venv\Scripts\python.exe -m alembic upgrade head
+.\.venv\Scripts\python.exe -m app.seed
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
+
+Access the API at http://localhost:8000 and use http://localhost:3000 for the
+frontend origin. Keep browser hostnames consistent; binding the server to
+127.0.0.1 keeps it local. There is no frontend login screen yet.
+
+Public assignment credentials:
+
+- Email: `demo@route53clone.dev`
+- Password: `Scaler@123`
+- Display name: `Demo User`
+
+The seed command creates an Argon2id password hash. Repeated runs leave the
+existing account, password, and profile unchanged. Seeding never runs on import
+or startup and does not create tables.
+
+| Endpoint | Behavior | Status |
+| --- | --- | --- |
+| POST /api/v1/auth/login | JSON email/password; sets cookie; returns safe user and expiry | 200; invalid credentials 401 |
+| GET /api/v1/auth/me | Resolves identity from the session cookie | 200; missing/invalid/expired session 401 |
+| POST /api/v1/auth/logout | Revokes session and clears cookie | 204, including missing/invalid/expired sessions |
+| GET /health | Existing process liveness | 200 |
+
+Login JSON: `{"email":"demo@route53clone.dev","password":"Scaler@123"}`.
+Login and me return `{user: {id, email, display_name}, expires_at}`.
+Password hashes, token hashes, and raw tokens never appear in response JSON.
+Malformed input returns 422; rejected mutation origins return 403. Errors use
+`{error: {code, message}}`; validation errors include safe field details without
+echoing input values.
+
+Sessions default to a fixed 24-hour lifetime without sliding refresh. Tokens
+contain 32 random bytes (256 bits); only their SHA-256 digest is stored.
+Passwords use Argon2, not SHA-256. Each login creates an independent session.
+Logout revokes only the supplied session. Expired sessions are rejected; logout
+also removes an expired row when its cookie is supplied. Background cleanup is
+not implemented.
+
+The reusable get_current_user dependency derives identity exclusively from the
+cookie-backed session. Authentication responses use Cache-Control: no-store.
+
+Additional backend environment settings:
+
+| Variable | Default |
+| --- | --- |
+| ALLOWED_FRONTEND_ORIGINS | JSON array: `["http://localhost:3000"]` |
+| SESSION_COOKIE_NAME | `route53_session` |
+| SESSION_TTL_SECONDS | `86400` |
+| SESSION_COOKIE_SECURE | `false` locally; set `true` for HTTPS |
+| SESSION_COOKIE_SAMESITE | `lax`; `none` requires Secure |
+
+The host-only cookie uses HttpOnly and Path=/, with Max-Age and Expires matching
+the stored expiry. CORS permits credentials only for explicitly configured
+origins, never wildcard origins. Future browser requests must use
+`credentials: "include"`. Login/logout reject an Origin that is neither a
+configured frontend origin nor the API's own origin. Clients without Origin
+remain supported. Deployment-specific CSRF hardening is deferred.
+
+Run authentication tests or the complete backend suite:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/test_auth.py
+.\.venv\Scripts\python.exe -m pytest
+```
+
+Tests migrate isolated temporary SQLite databases and never use the development
+database. They cover seeding, cookies, safe responses, expiry/revocation, session
+persistence, identity isolation, CORS/Origin checks, and transaction rollback.
+The installed Starlette version prefers httpx2 for its test client, avoiding its
+deprecated httpx fallback.
 
 ## Tooling notes
 
