@@ -10,6 +10,7 @@ import Header from "@cloudscape-design/components/header";
 import Input from "@cloudscape-design/components/input";
 import Select from "@cloudscape-design/components/select";
 import SpaceBetween from "@cloudscape-design/components/space-between";
+import Toggle from "@cloudscape-design/components/toggle";
 import { useState, type FormEvent } from "react";
 import { APIError } from "@/services/api";
 import type { DNSRecord, DNSRecordCreate, DNSRecordType } from "@/types/api";
@@ -217,15 +218,16 @@ export function RecordForm({
             <Button formAction="none" onClick={onCancel} disabled={submitting}>
               Cancel
             </Button>
-            <Button variant="primary" formAction="submit" loading={submitting}>
-              {mode === "create" ? "Create record" : "Save changes"}
-            </Button>
+            <span className={mode === "create" ? "aws-create-action" : undefined}><Button variant="primary" formAction="submit" loading={submitting}>
+                {mode === "create" ? "Create record" : "Save changes"}
+              </Button></span>
           </SpaceBetween>
         }
       >
-        <SpaceBetween size="m">
-          <Container header={<Header variant="h2">Record configuration</Header>}>
+        <div className="quick-create-form"><SpaceBetween size="s">
+          <Container header={<Header variant="h2">{mode === "create" ? "Quick create record" : "Record configuration"}</Header>}>
             <SpaceBetween size="m">
+              <Header variant="h3">Record 1</Header>
               <FormField
                 label="Record name"
                 description="Enter subdomain prefix or leave blank to create a record at the zone apex."
@@ -242,6 +244,9 @@ export function RecordForm({
                   <span className="record-suffix">.{zoneName}</span>
                 </div>
               </FormField>
+              <FormField description="Alias records are not supported in this assignment.">
+                <Toggle checked={false} disabled>Alias</Toggle>
+              </FormField>
               <ColumnLayout columns={2}>
                 <FormField label="Record type">
                   <Select
@@ -254,12 +259,14 @@ export function RecordForm({
                   />
                 </FormField>
                 <FormField label="TTL (seconds)">
-                  <Input
-                    type="number"
-                    value={ttl}
-                    onChange={({ detail }) => setTtl(detail.value)}
-                    disabled={submitting}
-                  />
+                  <SpaceBetween size="xs">
+                    <Input type="number" value={ttl} onChange={({ detail }) => setTtl(detail.value)} disabled={submitting} />
+                    <SpaceBetween direction="horizontal" size="xs">
+                      <Button onClick={() => setTtl("60")} disabled={submitting}>1m</Button>
+                      <Button onClick={() => setTtl("3600")} disabled={submitting}>1h</Button>
+                      <Button onClick={() => setTtl("86400")} disabled={submitting}>1d</Button>
+                    </SpaceBetween>
+                  </SpaceBetween>
                 </FormField>
               </ColumnLayout>
               <FormField label="Routing policy">
@@ -288,7 +295,7 @@ export function RecordForm({
                   ) : undefined
                 }
               >
-                Value / Route traffic to
+                Value
               </Header>
             }
           >
@@ -422,7 +429,7 @@ export function RecordForm({
               ))}
             </SpaceBetween>
           </Container>
-        </SpaceBetween>
+        </SpaceBetween></div>
       </Form>
     </form>
   );

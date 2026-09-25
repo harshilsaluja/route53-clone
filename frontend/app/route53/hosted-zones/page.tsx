@@ -107,6 +107,8 @@ function HostedZonesList() {
           resource="Hosted zones"
         />
       )}
+      <div className="aws-resource-split">
+      <div className="aws-console-table">
       <Table
         items={items}
         columnDefinitions={columns}
@@ -123,18 +125,29 @@ function HostedZonesList() {
             description="A hosted zone tells Route 53 how to respond to DNS queries for a domain."
             actions={
               <SpaceBetween direction="horizontal" size="xs">
+                <Button iconName="refresh" ariaLabel="Refresh hosted zones" onClick={() => query.refetch()} />
+                <Button
+                  disabled={selectedItems.length !== 1}
+                  onClick={() => selectedItems[0] && router.push(`/route53/hosted-zones/${selectedItems[0].id}`)}
+                >
+                  View details
+                </Button>
+                <Button
+                  disabled={selectedItems.length !== 1}
+                  onClick={() => selectedItems[0] && router.push(`/route53/hosted-zones/${selectedItems[0].id}/edit`)}
+                >
+                  Edit
+                </Button>
                 <Button
                   disabled={selectedItems.length !== 1}
                   onClick={() => setDeleteVisible(true)}
                 >
                   Delete
                 </Button>
-                <Button
-                  variant="primary"
-                  onClick={() => router.push("/route53/hosted-zones/create")}
-                >
-                  Create hosted zone
-                </Button>
+                <span className="aws-create-action"><Button
+                    variant="primary"
+                    onClick={() => router.push("/route53/hosted-zones/create")}
+                  >Create hosted zone</Button></span>
               </SpaceBetween>
             }
           >
@@ -215,6 +228,19 @@ function HostedZonesList() {
           </Box>
         }
       />
+      </div>
+      <aside className="aws-selection-pane" aria-label="Hosted zone selection details">
+        <Header variant="h2">{selectedItems.length} hosted zone selected</Header>
+        {selectedItems[0] ? (
+          <SpaceBetween size="m">
+            <div><Box variant="awsui-key-label">Domain name</Box><Link href={`/route53/hosted-zones/${selectedItems[0].id}`}>{selectedItems[0].name}</Link></div>
+            <div><Box variant="awsui-key-label">Type</Box>{selectedItems[0].type === "PUBLIC" ? "Public" : "Private"}</div>
+            <div><Box variant="awsui-key-label">Record count</Box>{selectedItems[0].record_count}</div>
+            <div><Box variant="awsui-key-label">Description</Box>{selectedItems[0].comment || "—"}</div>
+          </SpaceBetween>
+        ) : <Box color="text-body-secondary">Select a hosted zone to see its details</Box>}
+      </aside>
+      </div>
       <DeleteZoneModal
         zone={selectedItems[0] ?? null}
         visible={deleteVisible}

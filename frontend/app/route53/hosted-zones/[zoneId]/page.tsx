@@ -1,11 +1,13 @@
 "use client";
 
 import Box from "@cloudscape-design/components/box";
+import Badge from "@cloudscape-design/components/badge";
 import Button from "@cloudscape-design/components/button";
 import ColumnLayout from "@cloudscape-design/components/column-layout";
-import Container from "@cloudscape-design/components/container";
+import ExpandableSection from "@cloudscape-design/components/expandable-section";
 import Header from "@cloudscape-design/components/header";
 import SpaceBetween from "@cloudscape-design/components/space-between";
+import Tabs from "@cloudscape-design/components/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
@@ -58,23 +60,23 @@ export default function HostedZoneDetailPage() {
     <SpaceBetween size="m">
       <Header
         variant="h1"
-        description={`${zone.type === "PUBLIC" ? "Public" : "Private"} hosted zone`}
         actions={
           <SpaceBetween direction="horizontal" size="xs">
-            <Button onClick={() => setDeleteVisible(true)}>Delete</Button>
+            <Button onClick={() => setDeleteVisible(true)}>Delete zone</Button>
             <Button
               onClick={() =>
                 router.push(`/route53/hosted-zones/${zone.id}/edit`)
               }
             >
-              Edit
+              Edit hosted zone
             </Button>
           </SpaceBetween>
         }
       >
-        {zone.name}
+        <span className="aws-zone-title"><Badge color={zone.type === "PUBLIC" ? "blue" : "grey"}>{zone.type === "PUBLIC" ? "Public" : "Private"}</Badge>{zone.name}</span>
       </Header>
-      <Container header={<Header variant="h2">Hosted zone details</Header>}>
+      <div className="aws-details-section">
+      <ExpandableSection variant="container" defaultExpanded headerText="Hosted zone details">
         <ColumnLayout columns={4} variant="text-grid">
           <div>
             <Box variant="awsui-key-label">Domain name</Box>
@@ -105,16 +107,18 @@ export default function HostedZoneDetailPage() {
             <div>{formatDate(zone.updated_at)}</div>
           </div>
         </ColumnLayout>
-      </Container>
-      <Suspense
-        fallback={
-          <Box color="text-body-secondary" padding="l">
-            Loading records
-          </Box>
-        }
-      >
-        <RecordsTable zoneId={zone.id} />
-      </Suspense>
+      </ExpandableSection>
+      </div>
+      <div className="aws-zone-tabs">
+        <Tabs tabs={[
+          { id: "records", label: `Records (${zone.record_count})`, content: (
+            <Suspense fallback={<Box color="text-body-secondary" padding="l">Loading records</Box>}><RecordsTable zoneId={zone.id} /></Suspense>
+          ) },
+          { id: "recovery", label: "Accelerated recovery", content: <Box padding="l" color="text-body-secondary">Accelerated recovery is not available in this assignment.</Box> },
+          { id: "dnssec", label: "DNSSEC signing", content: <Box padding="l" color="text-body-secondary">DNSSEC signing is not available in this assignment.</Box> },
+          { id: "tags", label: "Hosted zone tags (0)", content: <Box padding="l" color="text-body-secondary">Hosted zone tags are not available in this assignment.</Box> },
+        ]} />
+      </div>
       <DeleteZoneModal
         zone={zone}
         visible={deleteVisible}

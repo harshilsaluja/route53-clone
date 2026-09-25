@@ -128,6 +128,83 @@ body {
   min-width: 170px;
 }
 
+/* Route 53 console density and split selection panes. */
+.aws-resource-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 0;
+  min-height: 32rem;
+}
+
+.aws-console-table {
+  min-width: 0;
+  border-right: 1px solid #d5dbdb;
+}
+
+.aws-selection-pane {
+  padding: 1.25rem 1.5rem;
+  background: #fff;
+}
+
+.aws-selection-pane > :first-child {
+  margin-bottom: 1.25rem;
+}
+
+.aws-zone-title {
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+}
+
+.aws-details-section,
+.aws-zone-tabs,
+.quick-create-form,
+.compact-form {
+  --awsui-border-radius-container: 2px;
+}
+
+.quick-create-form {
+  max-width: none;
+}
+
+.aws-create-action button {
+  background: #ff9900 !important;
+  border-color: #ff9900 !important;
+  color: #16191f !important;
+  font-weight: 700 !important;
+}
+
+.aws-create-action button:hover {
+  background: #ec7211 !important;
+  border-color: #ec7211 !important;
+}
+
+.aws-console-table table th,
+.aws-console-table table td {
+  padding-top: .5rem !important;
+  padding-bottom: .5rem !important;
+}
+
+.aws-console-table table {
+  font-size: .875rem;
+}
+
+.compact-form textarea {
+  min-height: 5rem;
+}
+
+@media (max-width: 1050px) {
+  .aws-resource-split {
+    grid-template-columns: 1fr;
+  }
+  .aws-console-table {
+    border-right: 0;
+  }
+  .aws-selection-pane {
+    border-top: 1px solid #d5dbdb;
+  }
+}
+
 @media (max-width: 700px) {
   .metadata-grid {
     grid-template-columns: 1fr;

@@ -76,13 +76,13 @@ export function ZoneForm({
             <Button formAction="none" onClick={onCancel} disabled={submitting}>
               Cancel
             </Button>
-            <Button variant="primary" formAction="submit" loading={submitting}>
-              {mode === "create" ? "Create hosted zone" : "Save changes"}
-            </Button>
+            <span className={mode === "create" ? "aws-create-action" : undefined}><Button variant="primary" formAction="submit" loading={submitting}>
+                {mode === "create" ? "Create hosted zone" : "Save changes"}
+              </Button></span>
           </SpaceBetween>
         }
       >
-        <SpaceBetween size="m">
+        <div className="compact-form"><SpaceBetween size="m">
           {mode === "edit" && (
             <Alert type="warning" header="Changing the domain name">
               Relative record names stay unchanged, so their derived fully qualified
@@ -148,7 +148,7 @@ export function ZoneForm({
               )}
             </SpaceBetween>
           </Container>
-        </SpaceBetween>
+        </SpaceBetween></div>
       </Form>
     </form>
   );

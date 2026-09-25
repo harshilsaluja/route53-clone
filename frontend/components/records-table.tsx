@@ -131,6 +131,8 @@ export function RecordsTable({ zoneId }: { zoneId: string }) {
           resource="Records"
         />
       )}
+      <div className="aws-resource-split aws-records-split">
+      <div className="aws-console-table">
       <Table
         items={items}
         columnDefinitions={columns}
@@ -147,33 +149,17 @@ export function RecordsTable({ zoneId }: { zoneId: string }) {
             description="DNS records stored in this hosted zone."
             actions={
               <SpaceBetween direction="horizontal" size="xs">
-                <Button
-                  disabled={selected.length !== 1}
-                  onClick={() =>
-                    selected[0] &&
-                    router.push(
-                      `/route53/hosted-zones/${zoneId}/records/${selected[0].id}/edit`,
-                    )
-                  }
-                >
-                  Edit
-                </Button>
+                <Button iconName="refresh" ariaLabel="Refresh records" onClick={() => query.refetch()} />
                 <Button
                   disabled={selected.length !== 1}
                   onClick={() => setDeleteVisible(true)}
                 >
                   Delete
                 </Button>
-                <Button
-                  variant="primary"
-                  onClick={() =>
-                    router.push(
-                      `/route53/hosted-zones/${zoneId}/records/create`,
-                    )
-                  }
-                >
-                  Create record
-                </Button>
+                <span className="aws-create-action"><Button
+                    variant="primary"
+                    onClick={() => router.push(`/route53/hosted-zones/${zoneId}/records/create`)}
+                  >Create record</Button></span>
               </SpaceBetween>
             }
           >
@@ -259,6 +245,22 @@ export function RecordsTable({ zoneId }: { zoneId: string }) {
           </Box>
         }
       />
+      </div>
+      <aside className="aws-selection-pane" aria-label="Record selection details">
+        <Header variant="h2">{selected.length} records selected</Header>
+        {selected[0] ? (
+          <SpaceBetween size="m">
+            <div><Box variant="awsui-key-label">Record name</Box><Link href={`/route53/hosted-zones/${zoneId}/records/${selected[0].id}`}>{selected[0].fqdn}</Link></div>
+            <div><Box variant="awsui-key-label">Type</Box>{selected[0].record_type}</div>
+            <div><Box variant="awsui-key-label">TTL</Box>{selected[0].ttl}</div>
+            <div><Box variant="awsui-key-label">Routing policy</Box>Simple</div>
+            <div><Box variant="awsui-key-label">Values</Box><Values values={selected[0].values} /></div>
+            <Button onClick={() => router.push(`/route53/hosted-zones/${zoneId}/records/${selected[0].id}`)}>View details</Button>
+            <Button onClick={() => router.push(`/route53/hosted-zones/${zoneId}/records/${selected[0].id}/edit`)}>Edit record</Button>
+          </SpaceBetween>
+        ) : <Box color="text-body-secondary">Select a record to see its details</Box>}
+      </aside>
+      </div>
       <DeleteRecordModal
         record={selected[0] ?? null}
         visible={deleteVisible}
