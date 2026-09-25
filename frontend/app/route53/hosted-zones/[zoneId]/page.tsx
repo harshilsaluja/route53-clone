@@ -8,9 +8,10 @@ import SpaceBetween from "@cloudscape-design/components/space-between";
 import StatusIndicator from "@cloudscape-design/components/status-indicator";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { DeleteZoneModal } from "@/components/delete-zone-modal";
 import { LoadingScreen } from "@/components/loading-screen";
+import { RecordsTable } from "@/components/records-table";
 import { ResourceError } from "@/components/resource-error";
 import { getHostedZone } from "@/services/hosted-zones";
 
@@ -96,22 +97,15 @@ export default function HostedZoneDetailPage() {
           </div>
         </div>
       </Container>
-      <Container
-        header={
-          <Header
-            variant="h2"
-            counter={`(${zone.record_count})`}
-            description="DNS records represented in this hosted zone."
-          >
-            Records
-          </Header>
+      <Suspense
+        fallback={
+          <Box color="text-body-secondary" padding="l">
+            Loading records
+          </Box>
         }
       >
-        <Box color="text-body-secondary">
-          DNS Record management UI will be available in the next implementation
-          phase. The backend record API is already available.
-        </Box>
-      </Container>
+        <RecordsTable zoneId={zone.id} />
+      </Suspense>
       <DeleteZoneModal
         zone={zone}
         visible={deleteVisible}

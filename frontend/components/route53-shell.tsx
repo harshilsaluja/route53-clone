@@ -32,13 +32,26 @@ function breadcrumbs(pathname: string): BreadcrumbGroupProps.Item[] {
   if (pathname.includes("/hosted-zones")) {
     items.push({ text: "Hosted zones", href: "/route53/hosted-zones" });
     if (pathname.endsWith("/create")) {
-      items.push({ text: "Create hosted zone", href: pathname });
+      if (pathname.includes("/records/create")) {
+        const zonePath = pathname.replace(/\/records\/create$/, "");
+        items.push({ text: "Hosted zone details", href: zonePath });
+        items.push({ text: "Create record", href: pathname });
+      } else {
+        items.push({ text: "Create hosted zone", href: pathname });
+      }
     } else {
       const parts = pathname.split("/").filter(Boolean);
       if (parts.length >= 3) {
-        items.push({ text: "Hosted zone details", href: pathname.replace(/\/edit$/, "") });
+        const zonePath = `/route53/hosted-zones/${parts[2]}`;
+        items.push({ text: "Hosted zone details", href: zonePath });
       }
-      if (pathname.endsWith("/edit")) {
+      if (parts[3] === "records" && parts[4]) {
+        const recordPath = `/route53/hosted-zones/${parts[2]}/records/${parts[4]}`;
+        items.push({ text: "Record details", href: recordPath });
+      }
+      if (pathname.endsWith("/edit") && parts[3] === "records") {
+        items.push({ text: "Edit record", href: pathname });
+      } else if (pathname.endsWith("/edit")) {
         items.push({ text: "Edit", href: pathname });
       }
     }

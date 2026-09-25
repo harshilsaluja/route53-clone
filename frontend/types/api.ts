@@ -41,6 +41,45 @@ export interface PaginatedHostedZones {
   pagination: PaginationMetadata;
 }
 
+export type DNSRecordType =
+  | "A"
+  | "AAAA"
+  | "CNAME"
+  | "TXT"
+  | "MX"
+  | "NS"
+  | "PTR"
+  | "SRV"
+  | "CAA";
+
+export interface DNSRecord {
+  id: string;
+  hosted_zone_id: string;
+  name: string;
+  fqdn: string;
+  record_type: DNSRecordType;
+  ttl: number;
+  routing_policy: "SIMPLE";
+  values: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DNSRecordCreate {
+  name: string;
+  record_type: DNSRecordType;
+  ttl: number;
+  routing_policy: "SIMPLE";
+  values: string[];
+}
+
+export type DNSRecordUpdate = Partial<DNSRecordCreate>;
+
+export interface PaginatedDNSRecords {
+  items: DNSRecord[];
+  pagination: PaginationMetadata;
+}
+
 export interface ValidationDetail {
   field: string;
   message: string;
