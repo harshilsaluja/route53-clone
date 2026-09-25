@@ -1,28 +1,79 @@
 :root {
   color-scheme: light;
-  font-family: Arial, Helvetica, sans-serif;
-  color: #16191f;
-  background: #f5f6f7;
+  background: #f2f3f3;
 }
 
 * {
   box-sizing: border-box;
 }
 
+html,
 body {
   margin: 0;
+  min-height: 100%;
 }
 
-main {
-  max-width: 56rem;
-  margin: 4rem auto;
+.aws-top-nav {
+  position: sticky;
+  top: 0;
+  z-index: 1001;
+}
+
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(20rem, 30rem);
+  place-content: center;
   padding: 2rem;
+  background:
+    linear-gradient(115deg, #0f1b2a 0 32%, transparent 32%),
+    #f2f3f3;
 }
 
-h1 {
-  font-size: 2rem;
+.login-brand {
+  color: #ffffff;
+  margin-bottom: 1.25rem;
+  padding-left: 0.25rem;
 }
 
-p {
-  line-height: 1.6;
+.login-brand strong {
+  color: #ff9900;
+}
+
+.loading-screen {
+  min-height: 60vh;
+  display: grid;
+  place-content: center;
+  text-align: center;
+}
+
+.metadata-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(14rem, 1fr));
+  gap: 1.25rem 2rem;
+}
+
+.metadata-label {
+  color: #5f6b7a;
+  font-size: 0.8rem;
+  margin-bottom: 0.25rem;
+}
+
+.metadata-value {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 700px) {
+  .login-page {
+    grid-template-columns: minmax(0, 1fr);
+    background: #f2f3f3;
+  }
+
+  .login-brand {
+    color: #16191f;
+  }
+
+  .metadata-grid {
+    grid-template-columns: 1fr;
+  }
 }

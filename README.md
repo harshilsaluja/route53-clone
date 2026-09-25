@@ -4,16 +4,15 @@ A software engineering assignment recreating Route 53 resource-management
 workflows using Next.js, TypeScript, FastAPI, and SQLite. This application will
 manage representations of DNS resources; it will not resolve DNS or call AWS.
 
-## Current status: Phase 5
+## Current status: combined Phases 6 + 7
 
 Implemented: frontend/backend scaffolds, the five-table SQLite model, Alembic
-migrations, backend session authentication, authenticated Hosted Zone CRUD, and
-authenticated DNS Record CRUD with type validation, SQL search/filtering/pagination,
-and isolated backend tests. GET /health remains unchanged.
+migrations, backend session authentication, authenticated Hosted Zone and DNS
+Record APIs, plus the Cloudscape/TanStack Query frontend foundation and complete
+Hosted Zones browser workflow. GET /health remains unchanged.
 
-Frontend login/resource UI, Cloudscape, frontend test tools, Alias records,
-automatic NS/SOA generation, and deployment remain deferred. Phase 6 requires
-explicit approval.
+The DNS Records frontend, Alias records, automatic NS/SOA generation, end-to-end
+test framework, and deployment remain deferred.
 
 ## Architecture
 
@@ -22,9 +21,9 @@ explicit approval.
 - SQLite foreign keys are enabled per connection. Sessions are request-scoped.
 - The engine does not connect or create schema on import/startup. `/health` is
   a process-liveness endpoint, not a database-readiness check.
-- The database now contains users, sessions, hosted zones, record sets, and values.
-  Authentication now uses opaque database-backed sessions. Future UI uses Cloudscape
-  and actual Route 53 visual references.
+- The database contains users, sessions, hosted zones, record sets, and values.
+  Authentication uses opaque database-backed sessions. The frontend uses
+  Cloudscape and remains subject to comparison with Route 53 visual references.
 
 ## Prerequisites
 
@@ -46,8 +45,9 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Open [the frontend](http://localhost:3000). The Phase 1 page states that the
-Next.js frontend is running. No backend request is made from this page yet.
+Open [the frontend](http://localhost:3000). Start the backend first, then sign in
+with the demo credentials below. Keep \`localhost\` consistent for both applications
+so the browser can use the host-only authentication cookie.
 
 ## Backend setup
 
@@ -246,7 +246,8 @@ From backend/, after installing requirements-dev.txt:
 
 Access the API at http://localhost:8000 and use http://localhost:3000 for the
 frontend origin. Keep browser hostnames consistent; binding the server to
-127.0.0.1 keeps it local. There is no frontend login screen yet.
+127.0.0.1 keeps it local. The frontend login page communicates directly with this
+API and includes the HttpOnly session cookie on authenticated requests.
 
 Public assignment credentials:
 
@@ -311,6 +312,34 @@ database. They cover seeding, cookies, safe responses, expiry/revocation, sessio
 persistence, identity isolation, CORS/Origin checks, and transaction rollback.
 The installed Starlette version prefers httpx2 for its test client, avoiding its
 deprecated httpx fallback.
+
+## Route 53 frontend
+
+The browser UI uses Cloudscape for the AWS-style shell and controls, and TanStack
+Query for session and Hosted Zone server state. All API calls go through a small
+typed client that sends credentials, handles empty 204 responses, and converts
+structured backend errors into safe frontend messages.
+
+| Route | Behavior |
+| --- | --- |
+| / | Redirects through the protected Route 53 area |
+| /login | Demo login and authentication errors |
+| /route53/hosted-zones | Backend search, type filtering, pagination, selection, and deletion |
+| /route53/hosted-zones/create | Create a public or private Hosted Zone |
+| /route53/hosted-zones/{zoneId} | Zone metadata and record-count summary |
+| /route53/hosted-zones/{zoneId}/edit | Edit name, description, and type |
+| Sidebar destinations | Intentional assignment placeholders |
+
+Protected pages restore the user through GET /api/v1/auth/me. Authentication
+tokens never enter JavaScript storage or application state; the browser manages
+the HttpOnly cookie. Logging out clears cached query data and returns to login.
+Create, update, and delete operations show Cloudscape notifications. Deletion
+requires confirmation and warns that stored records are also removed.
+
+The Hosted Zones list keeps search, type, and page in the URL. Search is debounced
+and all filtering and pagination happen in the FastAPI backend. The details page
+contains a neutral Records section placeholder; DNS Record frontend management is
+deliberately deferred to the next authorized phase.
 
 ## Hosted Zone backend API
 
