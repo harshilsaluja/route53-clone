@@ -14,9 +14,9 @@ focused, maintainable, and close to the approved phase scope.
   Do not duplicate them in pyproject.toml.
 - Add pytest when backend feature testing begins, frontend test libraries when
   needed, and Playwright when an end-to-end workflow exists.
-- Future UI uses Cloudscape plus review against actual Route 53 screenshots.
-- Future auth uses opaque server-side sessions and HttpOnly cookies.
-- Future zones are unique by (user_id, normalized name, type). Zone name,
+- The UI uses Cloudscape plus review against actual Route 53 screenshots.
+- Authentication uses opaque server-side sessions and HttpOnly cookies.
+- Zones are unique by (user_id, normalized name, type). Zone name,
   comment, and type are editable. Record owner names are relative; renaming a
   zone must warn that owner names change while target values remain unchanged.
 - DNS validation is assignment-level, not exhaustive RFC implementation.
@@ -27,7 +27,7 @@ focused, maintainable, and close to the approved phase scope.
 
 From frontend/: pnpm lint, pnpm typecheck, pnpm build.
 From backend/: run python -m uvicorn app.main:app, then GET /health.
-Use the backend virtual environment. Additional tests arrive with their phases.
+Use the backend virtual environment and run the complete pytest suite.
 
 At each phase end, report files changed, commands/checks, results, warnings,
 and the resulting source tree. Keep README synchronized.

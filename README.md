@@ -4,15 +4,26 @@ A software engineering assignment recreating Route 53 resource-management
 workflows using Next.js, TypeScript, FastAPI, and SQLite. This application will
 manage representations of DNS resources; it will not resolve DNS or call AWS.
 
-## Current status: combined Phases 6 + 7
+## Features implemented
 
-Implemented: frontend/backend scaffolds, the five-table SQLite model, Alembic
-migrations, backend session authentication, authenticated Hosted Zone and DNS
-Record APIs, plus the Cloudscape/TanStack Query frontend foundation and complete
-Hosted Zones browser workflow. GET /health remains unchanged.
+The assignment includes the frontend/backend scaffolds, five-table SQLite model,
+Alembic migrations, opaque session authentication, authenticated Hosted Zone and
+DNS Record APIs, and complete Cloudscape browser workflows for zones and records.
+The final workflow was exercised in a real headless browser against FastAPI and a
+disposable migrated SQLite database. `GET /health` remains available for liveness.
 
-The DNS Records frontend, Alias records, automatic NS/SOA generation, end-to-end
-test framework, and deployment remain deferred.
+The intentionally limited scope supports SIMPLE routing and the nine required
+record types. Alias records, automatic NS/SOA generation, exhaustive DNS RFC edge
+cases, and production cloud provisioning are outside this assignment.
+
+## Technology stack
+
+- Frontend: Next.js App Router, React, TypeScript, Cloudscape Design System,
+  and TanStack Query.
+- Backend: FastAPI, Pydantic, SQLModel/SQLAlchemy, Alembic, and Uvicorn.
+- Data and security: SQLite, Argon2 password hashing, and opaque server-side
+  sessions delivered through HttpOnly cookies.
+- Quality: pytest, ESLint, TypeScript type checking, and Next.js production builds.
 
 ## Architecture
 
@@ -46,7 +57,7 @@ pnpm dev
 ```
 
 Open [the frontend](http://localhost:3000). Start the backend first, then sign in
-with the demo credentials below. Keep \`localhost\` consistent for both applications
+with the demo credentials below. Keep `localhost` consistent for both applications
 so the browser can use the host-only authentication cookie.
 
 ## Backend setup
@@ -74,7 +85,7 @@ Alembic and Argon2 are runtime dependencies; pytest and httpx2 are development-o
 
 | Location | Variable | Default / purpose |
 | --- | --- | --- |
-| `frontend/.env.local` | `NEXT_PUBLIC_API_URL` | `http://localhost:8000/api/v1`; reserved for future API integration |
+| `frontend/.env.local` | `NEXT_PUBLIC_API_URL` | `http://localhost:8000/api/v1`; browser API base URL |
 | `backend/.env` | `APP_NAME` | `AWS Route 53 Clone API`; OpenAPI title |
 | `backend/.env` | `DATABASE_URL` | `sqlite:///./route53.db`; relative to `backend/`, not shell cwd |
 
@@ -104,8 +115,8 @@ Invoke-RestMethod http://127.0.0.1:8000/health
 ```
 
 Expected JSON: `{"status":"ok"}` with HTTP 200. Stop servers with Ctrl+C.
-Database and authentication tests are available below. Frontend and end-to-end
-test tools remain deferred.
+The backend pytest suite and frontend static checks cover the implemented scope.
+The final golden-path workflow was also verified in a real headless browser.
 
 ## Repository layout
 
@@ -114,7 +125,10 @@ AGENTS.md
 README.md
 .gitignore
 frontend/
-  app/                 # Root layout, startup page, basic global styles
+  app/                 # App Router pages for login, zones, and records
+  components/          # Cloudscape shell, forms, tables, and confirmation modals
+  services/            # Typed authentication, zone, and record API clients
+  types/               # Shared frontend API types
   .env.example
   eslint.config.mjs
   next-env.d.ts
@@ -151,6 +165,8 @@ backend/
     test_database.py
     test_migrations.py
   .env.example
+  Dockerfile           # Portable backend container and migration startup
+  .dockerignore
   alembic.ini
   pytest.ini
   requirements.txt
@@ -326,8 +342,11 @@ structured backend errors into safe frontend messages.
 | /login | Demo login and authentication errors |
 | /route53/hosted-zones | Backend search, type filtering, pagination, selection, and deletion |
 | /route53/hosted-zones/create | Create a public or private Hosted Zone |
-| /route53/hosted-zones/{zoneId} | Zone metadata and record-count summary |
+| /route53/hosted-zones/{zoneId} | Zone metadata and searchable DNS Records table |
 | /route53/hosted-zones/{zoneId}/edit | Edit name, description, and type |
+| /route53/hosted-zones/{zoneId}/records/create | Create any supported record type |
+| /route53/hosted-zones/{zoneId}/records/{recordId} | View a DNS record |
+| /route53/hosted-zones/{zoneId}/records/{recordId}/edit | Edit TTL and values |
 | Sidebar destinations | Intentional assignment placeholders |
 
 Protected pages restore the user through GET /api/v1/auth/me. Authentication
@@ -336,10 +355,12 @@ the HttpOnly cookie. Logging out clears cached query data and returns to login.
 Create, update, and delete operations show Cloudscape notifications. Deletion
 requires confirmation and warns that stored records are also removed.
 
-The Hosted Zones list keeps search, type, and page in the URL. Search is debounced
-and all filtering and pagination happen in the FastAPI backend. The details page
-contains a neutral Records section placeholder; DNS Record frontend management is
-deliberately deferred to the next authorized phase.
+The Hosted Zones and DNS Records lists keep search, filters, and page in the URL.
+Search is debounced and filtering and pagination happen in FastAPI. Record forms
+adapt to A, AAAA, CNAME, TXT, MX, NS, PTR, SRV, and CAA values. They preserve the
+relative-name model, expose a clear apex option, and support SIMPLE routing only.
+Record and zone deletion require confirmation; a zone rename warns that record
+owners remain relative and their displayed FQDNs therefore change with the zone.
 
 ## Hosted Zone backend API
 
@@ -402,11 +423,11 @@ PATCH requires at least one editable field. Omitted fields stay unchanged;
 comment:null clears the comment. name/type cannot be null, and unknown body
 fields are rejected. The merged zone is revalidated. Actual changes refresh
 updated_at. Renaming changes the future FQDN derived from relative record names,
-but never rewrites stored record names or target values. The future UI must warn
-about this behavior before renaming.
+but never rewrites stored record names or target values. The edit UI warns about
+this behavior before renaming.
 
 DELETE relies on database foreign-key cascades to remove record sets and values.
-No confirmation token is required; the future frontend will provide confirmation.
+No API confirmation token is required; the frontend provides confirmation.
 Mutations use the existing Origin check, and CORS permits GET/POST/PATCH/DELETE.
 Zone responses use Cache-Control: no-store. Missing authentication returns 401;
 invalid payloads/UUIDs return safe 422 errors. /docs exposes the request, response,
@@ -474,6 +495,49 @@ Run the DNS Record tests or complete backend suite from backend/:
 .\.venv\Scripts\python.exe -m pytest tests/test_dns_records.py
 .\.venv\Scripts\python.exe -m pytest
 ```
+
+## Deployment handoff
+
+No cloud account, authenticated provider CLI, or Git remote is configured in this
+workspace, so deployment is a short manual step. The repository is deployment-ready.
+Use a container host that supports a persistent disk for FastAPI and a Node-capable
+host for Next.js.
+
+Backend deployment:
+
+1. Select `backend/` as the service root and build its `Dockerfile`.
+2. Mount a persistent volume at `/data`. SQLite must not live on an ephemeral layer.
+3. Set `DATABASE_URL=sqlite:////data/route53.db`.
+4. Set `ALLOWED_FRONTEND_ORIGINS=["https://<frontend-host>"]`.
+5. Set `SESSION_COOKIE_SECURE=true` and, when the frontend and API are cross-site,
+   `SESSION_COOKIE_SAMESITE=none`.
+6. Expose the provider's `PORT`. The image starts Alembic migrations, idempotently
+   seeds the demo account, then starts Uvicorn.
+7. Verify `https://<backend-host>/health` and `/docs`.
+
+Frontend deployment:
+
+1. Select `frontend/` as the service root.
+2. Install with `pnpm install --frozen-lockfile` and build with `pnpm build`.
+3. Set `NEXT_PUBLIC_API_URL=https://<backend-host>/api/v1` before building.
+4. Start with `pnpm start`, then verify login, zone CRUD, record CRUD, and logout.
+
+Use HTTPS for both services. If the provider places both applications under the
+same site, `SESSION_COOKIE_SAMESITE=lax` is sufficient; otherwise use the secure
+cross-site cookie settings above. The frontend origin must exactly match the CORS
+origin configured for FastAPI.
+
+## Assignment scope
+
+- Implemented: session login/logout/restore, Hosted Zone CRUD, DNS Record CRUD,
+  filtering, pagination, validation, ownership isolation, migrations, demo seed,
+  Cloudscape UI, responsive loading/error/empty states, and confirmation flows.
+- Supported records: A, AAAA, CNAME, TXT, MX, NS, PTR, SRV, and CAA.
+- Deliberately excluded: Alias records, automatic NS/SOA records, non-SIMPLE
+  routing policies, exhaustive RFC behavior, AWS integration, and infrastructure
+  provisioning. IAM, Organizations, Billing, domain registration, and real VPC
+  integration are not implemented. These exclusions keep the work aligned with
+  the assignment.
 
 ## Tooling notes
 
