@@ -1,6 +1,5 @@
 """Authentication uses the same migrated temporary databases as database tests."""
 
-from collections.abc import Generator
 from datetime import UTC, datetime, timedelta
 from email.utils import parsedate_to_datetime
 from typing import Annotated
@@ -27,40 +26,6 @@ from app.services import auth_service
 LOGIN = "/api/v1/auth/login"
 ME = "/api/v1/auth/me"
 LOGOUT = "/api/v1/auth/logout"
-
-
-@pytest.fixture
-def auth_settings() -> Settings:
-    return Settings(
-        _env_file=None, allowed_frontend_origins=["http://localhost:3000"],
-        session_cookie_name="route53_session", session_cookie_secure=False,
-        session_cookie_samesite="lax", session_ttl_seconds=86400,
-    )
-
-
-@pytest.fixture
-def auth_app(db_engine: Engine, auth_settings: Settings) -> FastAPI:
-    application = create_app(auth_settings)
-
-    def isolated_session() -> Generator[DatabaseSession, None, None]:
-        with DatabaseSession(db_engine) as db:
-            yield db
-
-    application.dependency_overrides[get_session] = isolated_session
-    return application
-
-
-@pytest.fixture
-def client(auth_app: FastAPI) -> Generator[TestClient, None, None]:
-    with TestClient(auth_app, base_url="http://localhost:8000") as test_client:
-        yield test_client
-
-
-@pytest.fixture
-def demo_user(db_engine: Engine) -> UUID:
-    with DatabaseSession(db_engine) as db:
-        user, _ = seed_demo_user(db)
-        return user.id
 
 
 def login(client: TestClient):

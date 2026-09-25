@@ -1,7 +1,8 @@
 """Explicit canonicalization helpers; callers apply these before persistence.
 
 Table models never silently mutate names. Database checks reject noncanonical
-storage. Hostname syntax and FQDN-to-relative conversion arrive with services.
+storage. Domain syntax is checked in validation/dns_names.py; FQDN-to-relative
+conversion remains deferred to the DNS Record API phase.
 """
 
 

@@ -4,14 +4,15 @@ A software engineering assignment recreating Route 53 resource-management
 workflows using Next.js, TypeScript, FastAPI, and SQLite. This application will
 manage representations of DNS resources; it will not resolve DNS or call AWS.
 
-## Current status: Phase 3
+## Current status: Phase 4
 
 Implemented: frontend/backend scaffolds, the five-table SQLite model, Alembic
-migrations, backend demo authentication with persistent sessions, and isolated
-database/authentication tests. GET /health remains unchanged.
+migrations, backend session authentication, authenticated Hosted Zone CRUD with
+SQL search/filtering/pagination, and isolated backend tests. GET /health remains
+unchanged.
 
-Frontend login, resource APIs, Cloudscape UI, frontend test tools, and deployment
-remain deferred. Phase 4 requires explicit approval.
+DNS Record APIs, frontend login/resource UI, Cloudscape, frontend test tools, and
+deployment remain deferred. Phase 5 requires explicit approval.
 
 ## Architecture
 
@@ -132,9 +133,10 @@ backend/
     normalization.py
     security.py
     seed.py
-    routers/auth.py
-    schemas/auth.py
-    services/auth_service.py
+    routers/           # auth.py, hosted_zones.py
+    schemas/           # auth.py, common.py, hosted_zone.py
+    services/          # auth_service.py, hosted_zone_service.py
+    validation/dns_names.py
     models/            # User, Session, HostedZone, DNSRecordSet, DNSRecordValue
   migrations/
     env.py
@@ -143,6 +145,7 @@ backend/
   tests/
     conftest.py
     test_auth.py
+    test_hosted_zones.py
     test_database.py
     test_migrations.py
   .env.example
@@ -225,8 +228,8 @@ enums, UTC/UUID round trips, ordered values, transaction rollback, isolation of
 resource trees, raw-SQL and ORM cascades, and upgrade/downgrade/re-upgrade.
 Warnings are treated as test failures.
 
-Zone name/comment/type editing remains planned. Renaming a zone preserves
-relative record owners without rewriting target values. Alias, automatic NS/SOA,
+Zone name/comment/type editing is available through the Hosted Zone API.
+Renaming a zone preserves relative record owners without rewriting target values. Alias, automatic NS/SOA,
 and bonuses remain deferred. Deployment must preserve SQLite on persistent disk.
 
 ## Backend demo authentication
@@ -275,7 +278,7 @@ also removes an expired row when its cookie is supplied. Background cleanup is
 not implemented.
 
 The reusable get_current_user dependency derives identity exclusively from the
-cookie-backed session. Authentication responses use Cache-Control: no-store.
+cookie-backed session; Hosted Zone endpoints use it for ownership. Authentication responses use Cache-Control: no-store.
 
 Additional backend environment settings:
 
@@ -290,8 +293,8 @@ Additional backend environment settings:
 The host-only cookie uses HttpOnly and Path=/, with Max-Age and Expires matching
 the stored expiry. CORS permits credentials only for explicitly configured
 origins, never wildcard origins. Future browser requests must use
-`credentials: "include"`. Login/logout reject an Origin that is neither a
-configured frontend origin nor the API's own origin. Clients without Origin
+`credentials: "include"`. Mutating authentication and Hosted Zone requests reject an Origin that is neither
+a configured frontend origin nor the API's own origin. Clients without Origin
 remain supported. Deployment-specific CSRF hardening is deferred.
 
 Run authentication tests or the complete backend suite:
@@ -306,6 +309,88 @@ database. They cover seeding, cookies, safe responses, expiry/revocation, sessio
 persistence, identity isolation, CORS/Origin checks, and transaction rollback.
 The installed Starlette version prefers httpx2 for its test client, avoiding its
 deprecated httpx fallback.
+
+## Hosted Zone backend API
+
+All five endpoints require the session cookie. Ownership always comes from the
+authenticated user; request bodies cannot supply user_id. Another user's zone
+and a nonexistent zone both return 404 HOSTED_ZONE_NOT_FOUND.
+
+| Endpoint | Success | Purpose |
+| --- | --- | --- |
+| GET /api/v1/hosted-zones | 200 | List the current user's zones |
+| POST /api/v1/hosted-zones | 201 | Create a PUBLIC or PRIVATE zone |
+| GET /api/v1/hosted-zones/{zone_id} | 200 | Retrieve an owned zone |
+| PATCH /api/v1/hosted-zones/{zone_id} | 200 | Update name, comment, or type |
+| DELETE /api/v1/hosted-zones/{zone_id} | 204 | Delete an owned zone and its records |
+
+Create body:
+
+```json
+{"name": "Example.COM.", "type": "PUBLIC", "comment": "Production domain"}
+```
+
+Names are trimmed, lowercased, and have one optional trailing dot removed before
+validation. ASCII/punycode labels must be 1–63 characters, use letters/digits/
+hyphens, and cannot begin or end with a hyphen. The full normalized name is limited
+to 253 characters. Empty labels, spaces inside names, Unicode labels, wildcard
+zones, and URL syntax are rejected. No DNS lookup or IDN conversion is performed.
+Comments are optional/null and limited to 1,024 characters.
+
+Uniqueness remains (authenticated user, normalized name, type). Duplicate creates,
+renames, and type changes return 409 HOSTED_ZONE_ALREADY_EXISTS. Public and
+private zones may share a name, and different users may independently own the
+same name/type.
+
+List query parameters:
+
+| Parameter | Default | Accepted values |
+| --- | --- | --- |
+| search | empty | Trimmed substring of name or comment; maximum 1,024 characters |
+| type | no filter | PUBLIC or PRIVATE |
+| page | 1 | Integer >= 1 |
+| page_size | 20 | Integer 1–100 |
+| sort_by | name | name, type, created_at |
+| sort_order | asc | asc, desc |
+
+Search is case-insensitive for ASCII using SQLite; '%' and '_' are treated as
+literal characters. Search/type filters combine in SQL, and ordering/pagination
+also happen in SQL. ID ascending is the final sort tie-breaker. Unknown list query
+parameters, invalid sort fields, and invalid pagination values return 422.
+
+Responses expose id, name, type, comment, record_count, created_at, and updated_at.
+No owner ID or other user information is exposed. record_count is the number of
+record sets, not individual values. List counts are computed with an aggregate
+join without per-zone queries.
+
+Lists return `{items: [...], pagination: {page, page_size, total, pages}}`.
+total/pages reflect the filtered collection; zero matches means total=0/pages=0.
+A valid page beyond the last page returns an empty items array without an error.
+
+PATCH requires at least one editable field. Omitted fields stay unchanged;
+comment:null clears the comment. name/type cannot be null, and unknown body
+fields are rejected. The merged zone is revalidated. Actual changes refresh
+updated_at. Renaming changes the future FQDN derived from relative record names,
+but never rewrites stored record names or target values. The future UI must warn
+about this behavior before renaming.
+
+DELETE relies on database foreign-key cascades to remove record sets and values.
+No confirmation token is required; the future frontend will provide confirmation.
+Mutations use the existing Origin check, and CORS permits GET/POST/PATCH/DELETE.
+Zone responses use Cache-Control: no-store. Missing authentication returns 401;
+invalid payloads/UUIDs return safe 422 errors. /docs exposes the request, response,
+and query schemas.
+
+Run Hosted Zone tests or the complete backend suite from backend/:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/test_hosted_zones.py
+.\.venv\Scripts\python.exe -m pytest
+```
+
+Tests use migrated temporary SQLite databases. Existing record rows are created
+directly in test fixtures to verify counts, rename preservation, and cascades;
+there are no DNS Record endpoints yet.
 
 ## Tooling notes
 
