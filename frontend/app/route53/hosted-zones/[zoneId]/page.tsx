@@ -12,10 +12,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { DeleteZoneModal } from "@/components/delete-zone-modal";
+import { useNotifications } from "@/app/providers";
 import { LoadingScreen } from "@/components/loading-screen";
 import { RecordsTable } from "@/components/records-table";
 import { ResourceError } from "@/components/resource-error";
 import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
+import { listDNSRecords } from "@/services/dns-records";
 import { getHostedZone } from "@/services/hosted-zones";
 
 function formatDate(value: string) {
@@ -29,7 +31,9 @@ export default function HostedZoneDetailPage() {
   const { zoneId } = useParams<{ zoneId: string }>();
   const router = useRouter();
   const [deleteVisible, setDeleteVisible] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const { setLabel } = useBreadcrumbs();
+  const { notify } = useNotifications();
 
   const query = useQuery({
     queryKey: ["hosted-zone", zoneId],
@@ -56,12 +60,45 @@ export default function HostedZoneDetailPage() {
 
   const zone = query.data;
 
+  const exportJSON = async () => {
+    setExporting(true);
+    try {
+      const records = [];
+      let page = 1;
+      let pages = 1;
+      do {
+        const response = await listDNSRecords(zone.id, { page, page_size: 100 });
+        records.push(...response.items);
+        pages = response.pagination.pages;
+        page += 1;
+      } while (page <= pages);
+      const payload = {
+        hosted_zone: { id: zone.id, name: zone.name, type: zone.type, comment: zone.comment },
+        records: records.map(({ name, fqdn, record_type, ttl, routing_policy, values }) => ({
+          name, fqdn, record_type, ttl, routing_policy, values,
+        })),
+      };
+      const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }));
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${zone.name.replace(/[^a-z0-9.-]/gi, "-")}-route53.json`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+      notify({ type: "success", header: "Hosted zone exported successfully." });
+    } catch {
+      notify({ type: "error", header: "Hosted zone export failed.", content: "Try the export again." });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <SpaceBetween size="m">
       <Header
         variant="h1"
         actions={
           <SpaceBetween direction="horizontal" size="xs">
+            <Button iconName="download" loading={exporting} onClick={exportJSON}>Export JSON</Button>
             <Button onClick={() => setDeleteVisible(true)}>Delete zone</Button>
             <Button
               onClick={() =>

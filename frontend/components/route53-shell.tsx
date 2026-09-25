@@ -1,17 +1,20 @@
 "use client";
 
 import AppLayout from "@cloudscape-design/components/app-layout";
+import ButtonDropdown from "@cloudscape-design/components/button-dropdown";
 import BreadcrumbGroup, {
   type BreadcrumbGroupProps,
 } from "@cloudscape-design/components/breadcrumb-group";
 import Flashbar from "@cloudscape-design/components/flashbar";
+import Icon from "@cloudscape-design/components/icon";
 import SideNavigation, {
   type SideNavigationProps,
 } from "@cloudscape-design/components/side-navigation";
-import TopNavigation from "@cloudscape-design/components/top-navigation";
+import { applyDensity, applyMode, Density, Mode } from "@cloudscape-design/global-styles";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { usePathname, useRouter } from "next/navigation";
-import type { ReactNode } from "react";
+import Link from "next/link";
+import { useEffect, type ReactNode } from "react";
 import { useNotifications } from "@/app/providers";
 import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
 import { logout } from "@/services/auth";
@@ -174,40 +177,37 @@ export function Route53Shell({
   const activeNavHref = getActiveNavHref(pathname);
   const contentType = getContentType(pathname);
 
+  useEffect(() => {
+    applyMode(Mode.Dark);
+    applyDensity(Density.Compact);
+    document.body.classList.add("route53-console");
+    return () => {
+      applyMode(Mode.Light);
+      applyDensity(Density.Comfortable);
+      document.body.classList.remove("route53-console");
+    };
+  }, []);
+
   return (
     <>
       <div className="aws-top-nav" id="aws-top-nav">
-        <TopNavigation
-          identity={{
-            href: "/route53/hosted-zones",
-            title: "Route 53",
-            logo: {
-              src: "/aws-logo.svg",
-              alt: "Amazon Web Services",
-            },
-            onFollow: (event) => follow("/route53/hosted-zones", event),
-          }}
-          utilities={[
-            {
-              type: "button",
-              text: "Global",
-              iconName: "globe",
-              disableUtilityCollapse: true,
-            },
-            {
-              type: "menu-dropdown",
-              text: user.display_name,
-              description: user.email,
-              iconName: "user-profile",
-              items: [{ id: "logout", text: "Sign out" }],
-              onItemClick: ({ detail }) => {
-                if (detail.id === "logout" && !logoutMutation.isPending) {
-                  logoutMutation.mutate();
-                }
-              },
-            },
-          ]}
-        />
+        <div className="aws-global-header">
+          <Link className="aws-wordmark" href="/route53/hosted-zones" aria-label="AWS home">aws<span /></Link>
+          <div className="aws-service-tile" aria-hidden="true"><span>◇</span></div>
+          <button className="aws-launcher" type="button" aria-label="Services menu (decorative)">{Array.from({ length: 9 }, (_, index) => <span key={index} />)}</button>
+          <div className="aws-global-search" role="search" aria-label="Global search (decorative)"><span aria-hidden="true">⌕</span><span>Search</span><kbd>Alt+S</kbd></div>
+          <div className="aws-header-utilities" aria-label="AWS console utilities">
+            <button type="button" aria-label="CloudShell (decorative)"><Icon name="command-prompt" /></button>
+            <button type="button" aria-label="Notifications (decorative)"><Icon name="notification" /></button>
+            <button type="button" aria-label="Help (decorative)"><Icon name="status-info" /></button>
+            <button type="button" aria-label="Settings (decorative)"><Icon name="settings" /></button>
+          </div>
+          <div className="aws-region">Global <span aria-hidden="true">▾</span></div>
+          <div className="aws-account-menu"><ButtonDropdown
+            items={[{ id: "email", text: user.email, disabled: true }, { id: "logout", text: "Sign out" }]}
+            onItemClick={({ detail }) => { if (detail.id === "logout" && !logoutMutation.isPending) logoutMutation.mutate(); }}
+          >{user.display_name}</ButtonDropdown></div>
+        </div>
       </div>
       <AppLayout
         contentType={contentType}

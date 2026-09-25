@@ -237,6 +237,7 @@ function HostedZonesList() {
             <div><Box variant="awsui-key-label">Type</Box>{selectedItems[0].type === "PUBLIC" ? "Public" : "Private"}</div>
             <div><Box variant="awsui-key-label">Record count</Box>{selectedItems[0].record_count}</div>
             <div><Box variant="awsui-key-label">Description</Box>{selectedItems[0].comment || "—"}</div>
+            <div><Box variant="awsui-key-label">Hosted zone ID</Box>{selectedItems[0].id}</div>
           </SpaceBetween>
         ) : <Box color="text-body-secondary">Select a hosted zone to see its details</Box>}
       </aside>

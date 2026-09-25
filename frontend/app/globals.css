@@ -18,6 +18,126 @@ body {
   position: sticky;
   top: 0;
   z-index: 1001;
+  background: #0f1b2a;
+  border-bottom: 1px solid #414d5c;
+}
+
+.aws-global-header {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  padding: 0 1rem;
+  color: #f1f2f3;
+  background: #0f1b2a;
+}
+
+.aws-wordmark {
+  position: relative;
+  min-width: 58px;
+  color: #fff;
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.aws-wordmark span,
+.login-aws-wordmark span {
+  position: absolute;
+  left: 3px;
+  bottom: -7px;
+  width: 35px;
+  height: 8px;
+  border-bottom: 2px solid #ff9900;
+  border-radius: 50%;
+  transform: rotate(-4deg);
+}
+
+.aws-service-tile {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  background: #5b21b6;
+  border-radius: 5px;
+  color: #7dd3fc;
+  font-size: 1.55rem;
+  font-weight: 800;
+}
+
+.aws-launcher {
+  width: 35px;
+  height: 35px;
+  display: grid;
+  grid-template-columns: repeat(3, 4px);
+  place-content: center;
+  gap: 4px;
+  border: 0;
+  background: transparent;
+  cursor: default;
+}
+
+.aws-launcher span {
+  width: 4px;
+  height: 4px;
+  background: #d5dbdb;
+  border-radius: 1px;
+}
+
+.aws-global-search {
+  height: 36px;
+  max-width: 740px;
+  min-width: 240px;
+  flex: 1 1 620px;
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  padding: 0 .75rem;
+  border: 2px solid #7d8998;
+  border-radius: 8px;
+  color: #c6cbd2;
+  font-size: .9rem;
+}
+
+.aws-global-search > :nth-child(2) {
+  flex: 1;
+  font-style: italic;
+}
+
+.aws-global-search kbd {
+  color: #d5dbdb;
+  background: transparent;
+  font: inherit;
+}
+
+.aws-header-utilities {
+  display: flex;
+  align-items: center;
+}
+
+.aws-header-utilities button {
+  width: 42px;
+  height: 38px;
+  border: 0;
+  border-left: 1px solid #414d5c;
+  color: #f1f2f3;
+  background: transparent;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: default;
+}
+
+.aws-region {
+  padding: 0 .75rem;
+  font-size: .875rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.aws-account-menu {
+  border-left: 1px solid #414d5c;
+  padding-left: .65rem;
 }
 
 .login-page {
@@ -25,32 +145,69 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 2.5rem 1rem;
-  background-color: #f2f3f3;
+  justify-content: flex-start;
+  padding: 8rem 1rem 3rem;
+  background: #f7f7f7;
 }
 
 .login-card {
   width: 100%;
-  max-width: 28rem;
+  max-width: 25rem;
 }
 
-.login-brand {
+.login-header {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
-  color: #16191f;
-  font-size: 1.25rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  background: #161e2d;
+  border-bottom: 4px solid #ff9900;
 }
 
-.login-brand strong {
-  color: #ec7211;
-  font-weight: 900;
-  letter-spacing: 0.05em;
+.login-aws-wordmark {
+  position: relative;
+  color: #fff;
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.login-aws-wordmark span {
+  left: 5px;
+  bottom: -9px;
+  width: 50px;
+}
+
+.login-demo-account {
+  padding: 1rem;
+  border-top: 1px solid #d5dbdb;
+  background: #f2f3f3;
+  color: #414d5c;
+  font-size: .85rem;
+}
+
+.login-demo-account strong,
+.login-demo-account small {
+  display: block;
+}
+
+.login-demo-account > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: .55rem;
+}
+
+.login-demo-account code {
+  color: #16191f;
+  font-size: .8rem;
+}
+
+.login-demo-account small {
+  margin-top: .85rem;
+  color: #687078;
 }
 
 .loading-screen {
@@ -146,6 +303,34 @@ body {
   background: #fff;
 }
 
+.route53-console {
+  background: #0f1b2a;
+}
+
+.route53-console .aws-selection-pane {
+  background: #161f2d;
+}
+
+.route53-console .aws-console-table,
+.route53-console .aws-selection-pane {
+  border-color: #414d5c;
+}
+
+.route53-console .record-suffix {
+  color: #d5dbdb;
+  background: #263244;
+  border-color: #68778d;
+}
+
+.route53-console .record-values-cell,
+.route53-console .metadata-value {
+  color: #f1f2f3;
+}
+
+.route53-console .metadata-label {
+  color: #9ba7b6;
+}
+
 .aws-selection-pane > :first-child {
   margin-bottom: 1.25rem;
 }
@@ -202,6 +387,19 @@ body {
   }
   .aws-selection-pane {
     border-top: 1px solid #d5dbdb;
+  }
+}
+
+@media (max-width: 900px) {
+  .aws-global-search,
+  .aws-header-utilities {
+    display: none;
+  }
+  .aws-global-header {
+    gap: .45rem;
+  }
+  .aws-region {
+    margin-left: auto;
   }
 }
 

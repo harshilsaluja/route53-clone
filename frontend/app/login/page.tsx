@@ -1,6 +1,5 @@
 "use client";
 
-import Alert from "@cloudscape-design/components/alert";
 import Button from "@cloudscape-design/components/button";
 import Container from "@cloudscape-design/components/container";
 import Form from "@cloudscape-design/components/form";
@@ -42,18 +41,15 @@ export default function LoginPage() {
 
   return (
     <main className="login-page">
+      <header className="login-header"><div className="login-aws-wordmark">aws<span /></div></header>
       <div className="login-card">
-        <div className="login-brand">
-          <strong>AWS</strong>
-          <span>Route 53 Console</span>
-        </div>
         <Container
           header={
             <Header
               variant="h1"
-              description="Sign in to your Route 53 management console"
+              description="Use the assignment demo account to continue to the console."
             >
-              Sign in
+              Sign in to AWS
             </Header>
           }
         >
@@ -77,14 +73,6 @@ export default function LoginPage() {
               }
             >
               <SpaceBetween size="m">
-                <Alert type="info" header="Evaluator Demo Credentials">
-                  <div>
-                    Email: <code>demo@route53clone.dev</code>
-                  </div>
-                  <div>
-                    Password: <code>Scaler@123</code>
-                  </div>
-                </Alert>
                 <FormField label="Email">
                   <Input
                     type="email"
@@ -101,6 +89,12 @@ export default function LoginPage() {
                     disabled={mutation.isPending}
                   />
                 </FormField>
+                <div className="login-demo-account">
+                  <strong>Demo account</strong>
+                  <div><span>Email</span><code>demo@route53clone.dev</code></div>
+                  <div><span>Password</span><code>Scaler@123</code></div>
+                  <small>Route 53 Clone · Demo environment</small>
+                </div>
               </SpaceBetween>
             </Form>
           </form>

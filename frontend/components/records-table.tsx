@@ -152,6 +152,12 @@ export function RecordsTable({ zoneId }: { zoneId: string }) {
                 <Button iconName="refresh" ariaLabel="Refresh records" onClick={() => query.refetch()} />
                 <Button
                   disabled={selected.length !== 1}
+                  onClick={() => selected[0] && router.push(`/route53/hosted-zones/${zoneId}/records/${selected[0].id}/edit`)}
+                >
+                  Edit
+                </Button>
+                <Button
+                  disabled={selected.length !== 1}
                   onClick={() => setDeleteVisible(true)}
                 >
                   Delete
@@ -247,7 +253,7 @@ export function RecordsTable({ zoneId }: { zoneId: string }) {
       />
       </div>
       <aside className="aws-selection-pane" aria-label="Record selection details">
-        <Header variant="h2">{selected.length} records selected</Header>
+        <Header variant="h2">{selected.length} {selected.length === 1 ? "record" : "records"} selected</Header>
         {selected[0] ? (
           <SpaceBetween size="m">
             <div><Box variant="awsui-key-label">Record name</Box><Link href={`/route53/hosted-zones/${zoneId}/records/${selected[0].id}`}>{selected[0].fqdn}</Link></div>
